@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { apiService } from '../services/apiService';
 
 export const ClienteDashboard = () => {
     const [productosComprados, setProductosComprados] = useState([]);
@@ -9,10 +9,19 @@ export const ClienteDashboard = () => {
 
     useEffect(() => {
         if (clienteId) {
-            axios.get(`http://localhost:8080/api/clientes/mis-compras/${clienteId}`, {
-                headers: { Authorization: `Bearer ${token}` }
+            // Se utiliza fetch nativo con la URL pública de Coolify
+            fetch(`http://mercaditoa.2.24.105.6.sslip.io/api/v1/clientes/mis-compras/${clienteId}`, {
+                method: 'GET',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
             })
-            .then(res => setProductosComprados(res.data))
+            .then(res => {
+                if (!res.ok) throw new Error("Error al obtener las compras");
+                return res.json();
+            })
+            .then(data => setProductosComprados(data))
             .catch(err => console.error("Error al cargar compras:", err));
         }
     }, [clienteId, token]);
@@ -28,7 +37,7 @@ export const ClienteDashboard = () => {
                         <div key={prod.id} className="col-md-4 mb-4">
                             <div className="card h-100">
                                 <img 
-                                    src={prod.urlImagen || 'https://via.placeholder.com/150'} 
+                                    src={prod.imagenurl || prod.imagen_url || prod.urlImagen || 'https://via.placeholder.com/150'} 
                                     className="card-img-top" 
                                     alt={prod.nombre} 
                                     style={{ height: '200px', objectFit: 'cover' }}
