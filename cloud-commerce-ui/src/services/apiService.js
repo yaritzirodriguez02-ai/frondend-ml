@@ -1,4 +1,5 @@
-const API_URL ="http://localhost:8080/api/v1/"
+//const API_URL ="http://localhost:8080/api/v1/"
+const API_BASE_URL = 'http://2.24.105.6:8080/api/v1';
 
 
 //metodo helper para obtener las cabeceras con jwt
