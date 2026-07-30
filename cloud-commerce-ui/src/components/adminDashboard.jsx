@@ -53,10 +53,10 @@ export const AdminDashboard = ({ user }) => {
 
   // Formulario Proveedor
   const [formProveedor, setFormProveedor] = useState({
-    nombreEmpresa: '',
-    contacto: '',
+    nombre: '',
+    correo: '',
     telefono: '',
-    email: ''
+    direccion: ''
   });
 
   // Formulario Cliente (edición desde el panel de Admin)
@@ -243,7 +243,7 @@ const cargarDatos = async () => {
   const abrirModalCrearProveedor = () => {
     setModoEdicion(false);
     setEditId(null);
-    setFormProveedor({ nombreEmpresa: '', contacto: '', telefono: '', email: '' });
+    setFormProveedor({ nombre: '', correo: '', telefono: '', direccion: '' });
     setModalProveedor(true);
   };
 
@@ -251,10 +251,10 @@ const cargarDatos = async () => {
     setModoEdicion(true);
     setEditId(prov.id);
     setFormProveedor({
-      nombreEmpresa: prov.nombreEmpresa,
-      contacto: prov.contacto || '',
+      nombre: prov.nombre || '',
+      correo: prov.correo || '',
       telefono: prov.telefono || '',
-      email: prov.email || ''
+      direccion: prov.direccion || ''
     });
     setModalProveedor(true);
   };
@@ -651,10 +651,10 @@ const cargarDatos = async () => {
             <table className="w-full text-left text-sm text-purple-300">
               <thead className="bg-purple-950/50 text-purple-200 font-bold text-xs uppercase border-b border-purple-800/30">
                 <tr>
-                  <th className="p-3.5 rounded-l-2xl">Empresa</th>
-                  <th className="p-3.5">Contacto</th>
+                  <th className="p-3.5 rounded-l-2xl">Nombre</th>
+                  <th className="p-3.5">Correo</th>
                   <th className="p-3.5">Teléfono</th>
-                  <th className="p-3.5">Email</th>
+                  <th className="p-3.5">Dirección</th>
                   <th className="p-3.5 text-right rounded-r-2xl">Acciones</th>
                 </tr>
               </thead>
@@ -668,10 +668,10 @@ const cargarDatos = async () => {
                 ) : (
                   proveedores.map((prov) => (
                     <tr key={prov.id} className="hover:bg-purple-900/20 transition-colors">
-                      <td className="p-3 font-semibold text-purple-100">{prov.nombreEmpresa}</td>
-                      <td className="p-3 text-purple-300">{prov.contacto || 'N/A'}</td>
+                      <td className="p-3 font-semibold text-purple-100">{prov.nombre}</td>
+                      <td className="p-3 text-purple-300">{prov.correo || 'N/A'}</td>
                       <td className="p-3 font-medium text-[#c084fc]">{prov.telefono || 'N/A'}</td>
-                      <td className="p-3 text-purple-300">{prov.email || 'N/A'}</td>
+                      <td className="p-3 text-purple-300">{prov.direccion || 'N/A'}</td>
                       <td className="p-3 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
@@ -1072,7 +1072,7 @@ const cargarDatos = async () => {
                 >
                   <option value="" className="bg-[#13131f]">Selecciona proveedor</option>
                   {proveedores.map((prov) => (
-                    <option key={prov.id} value={prov.id} className="bg-[#13131f]">{prov.nombreEmpresa}</option>
+                    <option key={prov.id} value={prov.id} className="bg-[#13131f]">{prov.nombre}</option>
                   ))}
                 </select>
               </div>
@@ -1185,11 +1185,11 @@ const cargarDatos = async () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-purple-200 mb-1">Contacto / Representante</label>
+                <label className="block text-xs font-bold text-purple-200 mb-1">Correo Electrónico</label>
                 <input
-                  type="text"
-                  value={formProveedor.contacto}
-                  onChange={(e) => setFormProveedor({ ...formProveedor, email: e.target.value })}
+                  type="email"
+                  value={formProveedor.correo}
+                  onChange={(e) => setFormProveedor({ ...formProveedor, correo: e.target.value })}
                   className="w-full p-2.5 bg-purple-950/30 border border-purple-700/40 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 text-purple-100 placeholder-purple-500"
                 />
               </div>
@@ -1206,11 +1206,11 @@ const cargarDatos = async () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-purple-200 mb-1">Email</label>
+                  <label className="block text-xs font-bold text-purple-200 mb-1">Dirección</label>
                   <input
-                    type="email"
-                    value={formProveedor.email}
-                    onChange={(e) => setFormProveedor({ ...formProveedor, email: e.target.value })}
+                    type="text"
+                    value={formProveedor.direccion}
+                    onChange={(e) => setFormProveedor({ ...formProveedor, direccion: e.target.value })}
                     className="w-full p-2.5 bg-purple-950/30 border border-purple-700/40 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 text-purple-100 placeholder-purple-500"
                   />
                 </div>
