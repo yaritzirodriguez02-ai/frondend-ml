@@ -1,199 +1,167 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import { apiService } from "../services/apiService";
-import { UserPlus, User, Mail, Lock, Phone, MapPin,
-    Shield, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
-    
-    export const Registro = ({onRegisterSuccess, onGoToLogin}) => {
+import { UserPlus, User, Mail, Lock, Phone, MapPin, AlertCircle, CheckCircle } from 'lucide-react';
 
-        const [nombre, setNombre] = useState('');
-        const [username, setUsername] = useState('');
-        const [password, setPassword] = useState('');
-        const [rol, setRol] = useState('ROLE_CLIENTE');
-        const [direccion, setDireccion] = useState('');
-        const [telefono, setTelefono] = useState('');
+export const Registro = ({ onRegisterSuccess, onGoToLogin }) => {
+    const [nombre, setNombre] = useState('');
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [direccion, setDireccion] = useState('');
+    const [telefono, setTelefono] = useState('');
 
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+    const [loading, setLoading] = useState(false);
 
-        const [error, setError] = useState('');
-        const [success, setSuccess] = useState('');
-        const [loading, setLoading] = useState(false);
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setSuccess('');
+        setLoading(true);
 
-        const handleSubmit = async (e) => {
-            e.preventDefault();
-            setError('');
-            setSuccess('');
-            setLoading(true);
-            
-            const payload = {
-                username,
-                password,
-                nombre,
-                rol,    
-                direccion: rol === 'ROLE_CLIENTE' ? direccion : null,
-                telefono: rol === 'ROLE_CLIENTE' ? telefono : null
-            };
-
-            try{
-                await apiService.registro(payload);
-                setSuccess('¡Registro completado con éxito! Ahora puedes iniciar sesión.');
-                setTimeout(() => {
-                    onRegisterSuccess();
-                }, 2000);
-            }catch(err){
-                setError(err.message || 'Error al completar el registro. Intenta con otro correo.');
-            }finally{
-                setLoading(false);
-                
-            }
+        const payload = {
+            username,
+            password,
+            nombre,
+            rol: 'ROLE_CLIENTE', // Forzado
+            direccion,
+            telefono
         };
 
+        try {
+            await apiService.registro(payload);
+            setSuccess('¡Registro completado con éxito! Ahora puedes iniciar sesión.');
+            setTimeout(() => {
+                onRegisterSuccess();
+            }, 2000);
+        } catch (err) {
+            setError(err.message || 'Error al completar el registro. Intenta con otro correo.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
-        return(
-            <div className="max-w-lg w-full mx-auto my-12 bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl shadow-pink-100/50 overflow-hidden border border-pink-100">
-                <div className="bg-gradient-to-r from-pink-500 via-rose-400 to-fuchsia-500 px-6 py-6 text-center text-white shadow-sm">
-                    <h2 className="text-2xl font-bold drop-shadow-sm">Crear una Cuenta</h2>
-                    <p className="text-pink-100 mt-1 text-sm font-medium">
-                        Únete a MercaditoLibre hoy mismo
-                    </p>
+    return (
+        <div className="max-w-lg w-full mx-auto my-12 bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl shadow-pink-100/50 overflow-hidden border border-pink-100">
+            <div className="bg-gradient-to-r from-pink-500 via-rose-400 to-fuchsia-500 px-6 py-6 text-center text-white shadow-sm">
+                <h2 className="text-2xl font-bold drop-shadow-sm">Crear una Cuenta</h2>
+                <p className="text-pink-100 mt-1 text-sm font-medium">Únete a MercaditoLibre hoy mismo</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="px-6 py-8 space-y-4">
+                {error && (
+                    <div className="bg-rose-50 text-rose-700 p-4 rounded-2xl flex items-start gap-2.5 border border-rose-200 text-sm shadow-sm">
+                        <AlertCircle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                        <span>{error}</span>
+                    </div>
+                )}
+                {success && (
+                    <div className="bg-emerald-50 text-emerald-700 p-4 rounded-2xl flex items-start gap-2.5 border border-emerald-200 text-sm shadow-sm">
+                        <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                        <span>{success}</span>
+                    </div>
+                )}
+
+                <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Nombre Completo</label>
+                    <div className="relative">
+                        <User size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-pink-400" />
+                        <input
+                            type="text"
+                            value={nombre}
+                            onChange={(e) => setNombre(e.target.value)}
+                            required
+                            className="w-full pl-10 pr-3 py-2.5 bg-pink-50/30 border border-pink-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-pink-400 text-sm text-gray-800 placeholder-pink-300 transition-all"
+                            placeholder="Tu nombre completo"
+                        />
+                    </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="px-6 py-8 space-y-4">
-                    {error && (
-                        <div className="bg-rose-50 text-rose-700 p-4 rounded-2xl flex items-start gap-2.5 border border-rose-200 text-sm shadow-sm">
-                            <AlertCircle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
-                            <span>{error}</span>
-                        </div>
-                    )}
-                    {success && (
-                        <div className="bg-emerald-50 text-emerald-700 p-4 rounded-2xl flex items-start gap-2.5 border border-emerald-200 text-sm shadow-sm">
-                            <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                            <span>{success}</span>
-                        </div>
-                    )}
+                <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Correo electrónico</label>
+                    <div className="relative">
+                        <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-pink-400" />
+                        <input
+                            type="email"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            required
+                            className="w-full pl-10 pr-3 py-2.5 bg-pink-50/30 border border-pink-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-pink-400 text-sm text-gray-800 placeholder-pink-300 transition-all"
+                            placeholder="tucorreo@ejemplo.com"
+                        />
+                    </div>
+                </div>
 
-                    {/*Rol Selector*/}
+                <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Contraseña</label>
+                    <div className="relative">
+                        <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-pink-400" />
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            className="w-full pl-10 pr-3 py-2.5 bg-pink-50/30 border border-pink-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-pink-400 text-sm text-gray-800 placeholder-pink-300 transition-all"
+                            placeholder="Mínimo 6 caracteres"
+                            minLength={6}
+                        />
+                    </div>
+                </div>
+
+                <div className="space-y-4 border-t border-pink-100 pt-4">
+                    <h3 className="text-xs font-bold text-pink-400 uppercase tracking-wider">Información Adicional</h3>
+
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
-                            <Shield className="w-4 h-4 text-pink-500"/> Selecciona tu rol
-                        </label>
-                        <select
-                            value={rol}
-                            onChange={(e) => setRol(e.target.value)}
-                            className="w-full p-3 rounded-2xl border border-pink-200 bg-pink-50/30 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 transition-all cursor-pointer"
-                        >
-                            <option value="ROLE_CLIENTE">Cliente (Comprador)</option>
-                            <option value="ROLE_ADMIN">Administrador (Jefe)</option>
-                        </select>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">Teléfono de contacto</label>
+                        <div className="relative">
+                            <Phone size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-pink-400" />
+                            <input
+                                type="tel"
+                                value={telefono}
+                                onChange={(e) => setTelefono(e.target.value)}
+                                required
+                                className="w-full pl-10 pr-3 py-2.5 bg-pink-50/30 border border-pink-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-pink-400 text-sm text-gray-800 placeholder-pink-300 transition-all"
+                                placeholder="55 1234 5678"
+                            />
+                        </div>
                     </div>
 
-                    {/*Nombre Completo*/}
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Nombre Completo</label>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">Dirección</label>
                         <div className="relative">
-                            <User size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-pink-400" />
+                            <MapPin size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-pink-400" />
                             <input
                                 type="text"
-                                value={nombre}
-                                onChange={(e) => setNombre(e.target.value)}
+                                value={direccion}
+                                onChange={(e) => setDireccion(e.target.value)}
                                 required
                                 className="w-full pl-10 pr-3 py-2.5 bg-pink-50/30 border border-pink-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-pink-400 text-sm text-gray-800 placeholder-pink-300 transition-all"
-                                placeholder="Tu nombre completo"
+                                placeholder="Calle, número, colonia"
                             />
                         </div>
                     </div>
+                </div>
 
-                    {/*Correo electrónico*/}
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Correo electrónico</label>
-                        <div className="relative">
-                            <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-pink-400" />
-                            <input
-                                type="email"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                required
-                                className="w-full pl-10 pr-3 py-2.5 bg-pink-50/30 border border-pink-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-pink-400 text-sm text-gray-800 placeholder-pink-300 transition-all"
-                                placeholder="tucorreo@ejemplo.com"
-                            />
-                        </div>
-                    </div>
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-rose-400 hover:from-pink-600 hover:to-rose-500 text-white font-bold py-3 rounded-2xl shadow-md shadow-pink-200 transition-all duration-200 cursor-pointer disabled:opacity-50 mt-2"
+                >
+                    <UserPlus className="w-5 h-5" />
+                    {loading ? 'Creando cuenta...' : 'Crear cuenta'}
+                </button>
 
-                    {/*Contraseña*/}
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Contraseña</label>
-                        <div className="relative">
-                            <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-pink-400" />
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                className="w-full pl-10 pr-3 py-2.5 bg-pink-50/30 border border-pink-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-pink-400 text-sm text-gray-800 placeholder-pink-300 transition-all"
-                                placeholder="Mínimo 6 caracteres"
-                                minLength={6}
-                            />
-                        </div>
-                    </div>
-
-                    {/*Campos para el cliente*/}
-                    {rol === 'ROLE_CLIENTE' && (
-                        <div className="space-y-4 border-t border-pink-100 pt-4">
-                            <h3 className="text-xs font-bold text-pink-400 uppercase tracking-wider">Información Adicional</h3>
-
-                            {/*Teléfono de contacto*/}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Teléfono de contacto</label>
-                                <div className="relative">
-                                    <Phone size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-pink-400" />
-                                    <input
-                                        type="tel"
-                                        value={telefono}
-                                        onChange={(e) => setTelefono(e.target.value)}
-                                        required={rol === 'ROLE_CLIENTE'}
-                                        className="w-full pl-10 pr-3 py-2.5 bg-pink-50/30 border border-pink-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-pink-400 text-sm text-gray-800 placeholder-pink-300 transition-all"
-                                        placeholder="55 1234 5678"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Dirección</label>
-                                <div className="relative">
-                                    <MapPin size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-pink-400" />
-                                    <input
-                                        type="text"
-                                        value={direccion}
-                                        onChange={(e) => setDireccion(e.target.value)}
-                                        required={rol === 'ROLE_CLIENTE'}
-                                        className="w-full pl-10 pr-3 py-2.5 bg-pink-50/30 border border-pink-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-pink-400 text-sm text-gray-800 placeholder-pink-300 transition-all"
-                                        placeholder="Calle, número, colonia"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/*Boton Registrarse*/}
+                <div className="text-center text-sm text-gray-500 border-t border-pink-100 pt-5">
+                    ¿Ya tienes una cuenta?{' '}
                     <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-rose-400 hover:from-pink-600 hover:to-rose-500 text-white font-bold py-3 rounded-2xl shadow-md shadow-pink-200 transition-all duration-200 cursor-pointer disabled:opacity-50 mt-2"
+                        type="button"
+                        onClick={onGoToLogin}
+                        className="text-pink-600 hover:text-pink-700 hover:underline font-bold transition-colors cursor-pointer"
                     >
-                        <UserPlus className="w-5 h-5" />
-                        {loading ? 'Creando cuenta...' : 'Crear cuenta'}
+                        Inicia sesión
                     </button>
-
-                    {/*ir al login*/}
-                    <div className="text-center text-sm text-gray-500 border-t border-pink-100 pt-5">
-                        ¿Ya tienes una cuenta?{' '}
-                        <button
-                            type="button"
-                            onClick={onGoToLogin}
-                            className="text-pink-600 hover:text-pink-700 hover:underline font-bold transition-colors cursor-pointer"
-                        >
-                            Inicia sesión
-                        </button>
-                    </div>
-                </form>
-            </div>
-        )
-    }
+                </div>
+            </form>
+        </div>
+    );
+};
