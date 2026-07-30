@@ -1,5 +1,7 @@
 const API_URL = import.meta.env.DEV ? "http://localhost:8080/api/v1/":"http://mercaditoa.2.24.105.6.sslip.io/api/v1/"
 
+export const API_BASE_URL = API_URL;
+
 
 //metodo helper para obtener las cabeceras con jwt
 const getHeaders = () => {
@@ -68,7 +70,10 @@ export const apiService = {
             localStorage.setItem('token', data.token),
             localStorage.setItem('username', data.username),
             localStorage.setItem('nombre', data.nombre),
-            localStorage.setItem('rol', data.rol)
+            localStorage.setItem('rol', data.rol);
+            if(data.clienteId){
+                localStorage.setItem('clienteId', data.clienteId);
+            }
         } 
         return data;
 
@@ -76,11 +81,11 @@ export const apiService = {
     },
 
     //metodo de logout
-    logout: () => {
-        localStorage.removeItem('token'),
+    logout: () => {            localStorage.removeItem('token'),
         localStorage.removeItem('username'),
         localStorage.removeItem('nombre'),
-        localStorage.removeItem('rol')
+        localStorage.removeItem('rol'),
+        localStorage.removeItem('clienteId')
     },
 
     
@@ -444,6 +449,24 @@ const response = await fetch(API_URL+"pagos/confirmar-pago/"+idVenta,
     });
     return await handleResponse(response);
 
+    },
+
+    // Cancelar una venta (solo si está PENDIENTE)
+    cancelarVenta: async (idVenta) => {
+        const response = await fetch(API_URL+'ventas/'+idVenta+'/cancelar', {
+            method: 'POST',
+            headers: getHeaders(),
+        });
+        return await handleResponse(response);
+    },
+
+    // Reembolsar una venta (solo si está PAGADO)
+    reembolsarVenta: async (idVenta) => {
+        const response = await fetch(API_URL+'ventas/'+idVenta+'/reembolsar', {
+            method: 'POST',
+            headers: getHeaders(),
+        });
+        return await handleResponse(response);
     }
 
 

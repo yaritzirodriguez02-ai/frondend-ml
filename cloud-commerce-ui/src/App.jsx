@@ -115,11 +115,11 @@ const cartCount = cart.reduce((sum, item)=> sum+item.cantidad, 0);
         user={user}/>
          //addToCart={addToCart} 
 
-             case 'miscompras':
-        return <ClienteDashboard setVistaActual={setVistaActual}
+      case 'miscompras':
+        return <ClienteDashboard 
+        setVistaActual={setVistaActual}
+        setVentaActiva={setVentaActiva}
         user={user}/>
-         //addToCart={addToCart} 
-
 
       case 'register':
         return (
@@ -134,11 +134,8 @@ const cartCount = cart.reduce((sum, item)=> sum+item.cantidad, 0);
               onGoToRegister={() => setVistaActual('register')}
 
               />
-            );
-            case 'checkout':
-              return<CheckoutForm ventaActiva={ventaActiva}setVistaActual={setVistaActual}/>;
-              case 'miscompras':
-                return <Purchases/>;
+            );              case 'checkout':
+              return<CheckoutForm ventaActiva={ventaActiva} setVistaActual={setVistaActual}/>;
       default:
         return <Catalogo setVistaActual={setVistaActual}
          user={user}

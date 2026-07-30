@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { apiService } from '../services/apiService';
+import { apiService, API_BASE_URL } from '../services/apiService';
 import { 
   DollarSign, ShoppingBag, Package, FolderTree, 
   Users, ShoppingCart, Plus, Trash2, Edit3, User, 
-  Mail, Phone, MapPin, ShieldCheck, X, Check, Truck, Tags, UserCog
+  Mail, Phone, MapPin, ShieldCheck, X, Check, Truck, Tags, UserCog,
+  XCircle, RotateCcw, FileText
 } from 'lucide-react';
 
 export const AdminDashboard = ({ user }) => {
@@ -16,6 +17,7 @@ export const AdminDashboard = ({ user }) => {
   const [proveedores, setProveedores] = useState([]);
   const [clientes, setClientes] = useState([]); 
   const [usuarios, setUsuarios] = useState([]);
+  const [ventas, setVentas] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Estados para modales
@@ -97,6 +99,16 @@ const cargarDatos = async () => {
     if (apiService.getClientes) {
       const dataClientes = await apiService.getClientes();
       setClientes(dataClientes || []);
+    }
+
+    // --- CARGA DE VENTAS (para el panel de ventas) ---
+    try {
+      if (apiService.getSales) {
+        const dataVentas = await apiService.getSales();
+        setVentas(Array.isArray(dataVentas) ? dataVentas : []);
+      }
+    } catch (errorVentas) {
+      console.error("Error al cargar ventas:", errorVentas.message);
     }
 
     // --- CARGA AISLADA DE USUARIOS ---
@@ -689,10 +701,115 @@ const cargarDatos = async () => {
 
       {/* VISTA: REGISTRO DE VENTAS */}
       {tabActiva === 'ventas' && (
-        <div className="bg-[#13131f] rounded-3xl border border-purple-800/30 p-8 text-center shadow-sm">
-          <ShoppingCart className="w-12 h-12 text-purple-500 mx-auto mb-3" />
-          <h3 className="font-bold text-lg text-purple-100">Historial de Ventas</h3>
-          <p className="text-purple-400 text-sm mt-1">Aún no se registran compras procesadas en la plataforma.</p>
+        <div className="bg-[#13131f] rounded-3xl border border-purple-800/30 p-6 shadow-sm">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold text-purple-100">Historial de Ventas</h2>
+            <span className="bg-purple-900/50 text-purple-300 px-3 py-1 rounded-full text-xs font-bold">
+              Total: {ventas.length} ventas
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm text-purple-300">
+              <thead className="bg-purple-950/50 text-purple-200 font-bold text-xs uppercase border-b border-purple-800/30">
+                <tr>
+                  <th className="p-3.5 rounded-l-2xl"># Orden</th>
+                  <th className="p-3.5">Fecha</th>
+                  <th className="p-3.5">Cliente</th>
+                  <th className="p-3.5">Total</th>
+                  <th className="p-3.5">Estado</th>
+                  <th className="p-3.5 text-right rounded-r-2xl">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-purple-800/20">
+                {ventas.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="text-center py-8 text-purple-500">
+                      No hay ventas registradas en la plataforma.
+                    </td>
+                  </tr>
+                ) : (
+                  ventas.map((v) => {
+                    const getEstadoColor = (estado) => {
+                      switch(estado) {
+                        case 'PENDIENTE': return 'text-amber-300 bg-amber-950/40 border border-amber-800/40';
+                        case 'PAGADO': return 'text-emerald-300 bg-emerald-950/40 border border-emerald-800/40';
+                        case 'CANCELADO': return 'text-pink-300 bg-pink-950/40 border border-pink-800/40';
+                        case 'REEMBOLSADO': return 'text-purple-300 bg-purple-950/40 border border-purple-800/40';
+                        default: return 'text-gray-300 bg-gray-800';
+                      }
+                    };
+                    return (
+                      <tr key={v.id} className="hover:bg-purple-900/20 transition-colors">
+                        <td className="p-3 font-mono font-bold text-purple-200">#{v.id}</td>
+                        <td className="p-3 text-purple-300">{v.fecha || 'N/A'}</td>
+                        <td className="p-3 font-semibold text-purple-100">{v.cliente?.nombre || 'N/A'}</td>
+                        <td className="p-3 font-bold text-[#c084fc]">${v.total?.toFixed(2)} MXN</td>
+                        <td className="p-3">
+                          <span className={"inline-block px-2.5 py-1 rounded-full text-xs font-bold " + getEstadoColor(v.estadoPago)}>
+                            {v.estadoPago || 'SIN ESTADO'}
+                          </span>
+                        </td>
+                        <td className="p-3 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {v.estadoPago === 'PENDIENTE' && (
+                              <button
+                                onClick={async () => {
+                                  if(window.confirm('¿Cancelar esta venta #' + v.id + '?')) {
+                                    try {
+                                      await apiService.cancelarVenta(v.id);
+                                      cargarDatos();
+                                    } catch(e) { alert('Error: ' + e.message); }
+                                  }
+                                }}
+                                className="p-2 bg-pink-950/40 hover:bg-pink-900/50 text-pink-400 rounded-xl transition-colors cursor-pointer"
+                                title="Cancelar venta"
+                              >
+                                <XCircle className="w-4 h-4" />
+                              </button>
+                            )}
+                            {v.estadoPago === 'PAGADO' && (
+                              <button
+                                onClick={async () => {
+                                  if(window.confirm('¿Reembolsar esta venta #' + v.id + '?')) {
+                                    try {
+                                      await apiService.reembolsarVenta(v.id);
+                                      cargarDatos();
+                                    } catch(e) { alert('Error: ' + e.message); }
+                                  }
+                                }}
+                                className="p-2 bg-amber-950/40 hover:bg-amber-900/50 text-amber-400 rounded-xl transition-colors cursor-pointer"
+                                title="Reembolsar venta"
+                              >
+                                <RotateCcw className="w-4 h-4" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => {
+                                const token = localStorage.getItem('token');
+                                const url = API_BASE_URL + 'ventas/' + v.id + '/ticket';
+                                const w = window.open('', '_blank');
+                                if(w) {
+                                  fetch(url, { headers: { 'Authorization': 'Bearer ' + token } })
+                                    .then(r => r.text())
+                                    .then(h => { w.document.write(h); w.document.close(); w.focus(); })
+                                    .catch(() => w.close());
+                                }
+                              }}
+                              className="p-2 bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-400 rounded-xl transition-colors cursor-pointer"
+                              title="Ver ticket"
+                            >
+                              <FileText className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
