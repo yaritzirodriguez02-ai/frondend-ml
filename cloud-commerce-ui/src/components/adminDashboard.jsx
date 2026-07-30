@@ -82,21 +82,19 @@ export const AdminDashboard = ({ user }) => {
   };
 
   // --- LÓGICA DE PRODUCTOS ---
-  const abrirModalEditarProducto = (prod) => {
-  setModoEdicion(true);
-  setEditId(prod.id);
-  setFormProducto({
-    nombre: prod.nombre,
-    descripcion: prod.descripcion || '',
-    precio: prod.precio,
-    stock: prod.stock,
-    // Busca en ambos nombres por si viene con guion bajo o sin guion bajo desde la BD:
-    imagenUrl: prod.imagenUrl || prod.imagenurl || '', 
-    categoriaId: prod.categoria?.id || '',
-    proveedorId: prod.proveedor?.id || ''
-  });
-  setModalProducto(true);
-};tModalProducto(true);
+  const abrirModalCrearProducto = () => {
+    setModoEdicion(false);
+    setEditId(null);
+    setFormProducto({
+      nombre: '',
+      descripcion: '',
+      precio: '',
+      stock: '',
+      imagenUrl: '',
+      categoriaId: '',
+      proveedorId: ''
+    });
+    setModalProducto(true);
   };
 
   const abrirModalEditarProducto = (prod) => {
@@ -107,7 +105,8 @@ export const AdminDashboard = ({ user }) => {
       descripcion: prod.descripcion || '',
       precio: prod.precio,
       stock: prod.stock,
-      imagenUrl: prod.imagenUrl || '',
+      // Busca en ambos nombres por si viene con guion bajo o sin guion bajo desde la BD:
+      imagenUrl: prod.imagenUrl || prod.imagenurl || '',
       categoriaId: prod.categoria?.id || '',
       proveedorId: prod.proveedor?.id || ''
     });
@@ -115,32 +114,19 @@ export const AdminDashboard = ({ user }) => {
   };
 
   const guardarProducto = async (e) => {
-  e.preventDefault();
-  
-  // Enviamos la propiedad con ambos nombres para asegurar compatibilidad con la BD
-  const payload = {
-    nombre: formProducto.nombre,
-    descripcion: formProducto.descripcion,
-    precio: parseFloat(formProducto.precio),
-    stock: parseInt(formProducto.stock),
-    imagenUrl: formProducto.imagenUrl,
-    imagenurl: formProducto.imagenUrl, // Doble mapeo por la columna en BD
-    categoria: formProducto.categoriaId ? { id: parseInt(formProducto.categoriaId) } : null,
-    proveedor: formProducto.proveedorId ? { id: parseInt(formProducto.proveedorId) } : null
-  };
+    e.preventDefault();
 
-  try {
-    if (modoEdicion) {
-      await apiService.actualizarProducto(editId, payload);
-    } else {
-      await apiService.crearProducto(payload);
-    }
-    setModalProducto(false);
-    cargarDatos(); // Recargar datos para reflejar la nueva imagen inmediatamente
-  } catch (error) {
-    alert('Error al guardar el producto: ' + error.message);
-  }
-};
+    // Enviamos la propiedad con ambos nombres para asegurar compatibilidad con la BD
+    const payload = {
+      nombre: formProducto.nombre,
+      descripcion: formProducto.descripcion,
+      precio: parseFloat(formProducto.precio),
+      stock: parseInt(formProducto.stock),
+      imagenUrl: formProducto.imagenUrl,
+      imagenurl: formProducto.imagenUrl, // Doble mapeo por la columna en BD
+      categoria: formProducto.categoriaId ? { id: parseInt(formProducto.categoriaId) } : null,
+      proveedor: formProducto.proveedorId ? { id: parseInt(formProducto.proveedorId) } : null
+    };
 
     try {
       if (modoEdicion) {
@@ -149,11 +135,11 @@ export const AdminDashboard = ({ user }) => {
         await apiService.crearProducto(payload);
       }
       setModalProducto(false);
-      cargarDatos();
+      cargarDatos(); // Recargar datos para reflejar la nueva imagen inmediatamente
     } catch (error) {
       alert('Error al guardar el producto: ' + error.message);
     }
-  ;
+  };
 
   const eliminarProducto = async (id) => {
     if (window.confirm('¿Seguro que deseas eliminar este producto?')) {
@@ -924,3 +910,4 @@ export const AdminDashboard = ({ user }) => {
 
     </div>
   );
+};
