@@ -210,7 +210,7 @@ export const apiService = {
 
 
     },
-     getCliente: async() =>{
+     getCliente: async(id) =>{
         const response = await fetch(
             API_URL+'clientes/'+id,{headers: getHeaders()}
 
@@ -254,6 +254,30 @@ export const apiService = {
                 headers: getHeaders()
             }
 
+        );
+        return await handleResponse(response);
+    },
+
+    // ---- Gestión de Usuarios (SOLO Admin) ----
+    // Crea un usuario con login (Administrador o Cliente) desde el panel de Admin.
+    // payload esperado: { username, password, nombre, direccion, telefono, rol: 'ROLE_ADMIN' | 'ROLE_CLIENTE' }
+    crearUsuario: async (usuario) => {
+        const response = await fetch(
+            API_URL + 'usuarios',
+            {
+                method: 'POST',
+                body: JSON.stringify(usuario),
+                headers: getHeaders()
+            }
+        );
+        return await handleResponse(response);
+    },
+
+    // Lista todos los usuarios (admins y clientes) registrados en el sistema.
+    getUsuarios: async () => {
+        const response = await fetch(
+            API_URL + 'usuarios',
+            { headers: getHeaders() }
         );
         return await handleResponse(response);
     },

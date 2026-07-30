@@ -3,7 +3,7 @@ import { apiService } from '../services/apiService';
 import { 
   DollarSign, ShoppingBag, Package, FolderTree, 
   Users, ShoppingCart, Plus, Trash2, Edit3, User, 
-  Mail, Phone, MapPin, ShieldCheck, X, Check, Truck, Tags 
+  Mail, Phone, MapPin, ShieldCheck, X, Check, Truck, Tags, UserCog
 } from 'lucide-react';
 
 export const AdminDashboard = ({ user }) => {
@@ -21,9 +21,15 @@ export const AdminDashboard = ({ user }) => {
   const [modalProducto, setModalProducto] = useState(false);
   const [modalCategoria, setModalCategoria] = useState(false);
   const [modalProveedor, setModalProveedor] = useState(false);
+  const [modalCliente, setModalCliente] = useState(false);
+  const [modalUsuario, setModalUsuario] = useState(false);
 
   const [modoEdicion, setModoEdicion] = useState(false);
   const [editId, setEditId] = useState(null);
+
+  // Mensajes de la sección de Gestión de Usuarios
+  const [usuarioError, setUsuarioError] = useState('');
+  const [usuarioExito, setUsuarioExito] = useState('');
 
   // Formulario Producto
   const [formProducto, setFormProducto] = useState({
@@ -48,6 +54,24 @@ export const AdminDashboard = ({ user }) => {
     contacto: '',
     telefono: '',
     email: ''
+  });
+
+  // Formulario Cliente (edición desde el panel de Admin)
+  const [formCliente, setFormCliente] = useState({
+    nombre: '',
+    email: '',
+    direccion: '',
+    telefono: ''
+  });
+
+  // Formulario de creación de Usuario (Admin o Cliente con login)
+  const [formUsuario, setFormUsuario] = useState({
+    nombre: '',
+    username: '',
+    password: '',
+    direccion: '',
+    telefono: '',
+    rol: 'ROLE_CLIENTE'
   });
 
   // Carga inicial
@@ -105,7 +129,6 @@ export const AdminDashboard = ({ user }) => {
       descripcion: prod.descripcion || '',
       precio: prod.precio,
       stock: prod.stock,
-      // Busca en ambos nombres por si viene con guion bajo o sin guion bajo desde la BD:
       imagenUrl: prod.imagenUrl || prod.imagenurl || '',
       categoriaId: prod.categoria?.id || '',
       proveedorId: prod.proveedor?.id || ''
@@ -116,14 +139,13 @@ export const AdminDashboard = ({ user }) => {
   const guardarProducto = async (e) => {
     e.preventDefault();
 
-    // Enviamos la propiedad con ambos nombres para asegurar compatibilidad con la BD
     const payload = {
       nombre: formProducto.nombre,
       descripcion: formProducto.descripcion,
       precio: parseFloat(formProducto.precio),
       stock: parseInt(formProducto.stock),
       imagenUrl: formProducto.imagenUrl,
-      imagenurl: formProducto.imagenUrl, // Doble mapeo por la columna en BD
+      imagenurl: formProducto.imagenUrl,
       categoria: formProducto.categoriaId ? { id: parseInt(formProducto.categoriaId) } : null,
       proveedor: formProducto.proveedorId ? { id: parseInt(formProducto.proveedorId) } : null
     };
@@ -135,7 +157,7 @@ export const AdminDashboard = ({ user }) => {
         await apiService.crearProducto(payload);
       }
       setModalProducto(false);
-      cargarDatos(); // Recargar datos para reflejar la nueva imagen inmediatamente
+      cargarDatos();
     } catch (error) {
       alert('Error al guardar el producto: ' + error.message);
     }
@@ -239,6 +261,76 @@ export const AdminDashboard = ({ user }) => {
     }
   };
 
+  // --- LÓGICA DE CLIENTES (editar / eliminar desde el panel de Admin) ---
+  const abrirModalEditarCliente = (cli) => {
+    setModoEdicion(true);
+    setEditId(cli.id);
+    setFormCliente({
+      nombre: cli.nombre || '',
+      email: cli.email || cli.username || '',
+      direccion: cli.direccion || '',
+      telefono: cli.telefono || ''
+    });
+    setModalCliente(true);
+  };
+
+  const guardarCliente = async (e) => {
+    e.preventDefault();
+    try {
+      await apiService.actualizarClientes(editId, formCliente);
+      setModalCliente(false);
+      cargarDatos();
+    } catch (error) {
+      alert('Error al actualizar cliente: ' + error.message);
+    }
+  };
+
+  const eliminarCliente = async (id) => {
+    if (window.confirm('¿Seguro que deseas eliminar este cliente? Esta acción no se puede deshacer.')) {
+      try {
+        await apiService.eliminarClientes(id);
+        cargarDatos();
+      } catch (error) {
+        alert('Error al eliminar cliente: ' + error.message);
+      }
+    }
+  };
+
+  // --- LÓGICA DE GESTIÓN DE USUARIOS (crear Admin o Cliente con login) ---
+  const abrirModalCrearUsuario = () => {
+    setFormUsuario({
+      nombre: '',
+      username: '',
+      password: '',
+      direccion: '',
+      telefono: '',
+      rol: 'ROLE_CLIENTE'
+    });
+    setUsuarioError('');
+    setUsuarioExito('');
+    setModalUsuario(true);
+  };
+
+  const guardarUsuario = async (e) => {
+    e.preventDefault();
+    setUsuarioError('');
+    setUsuarioExito('');
+    try {
+      await apiService.crearUsuario(formUsuario);
+      setUsuarioExito(
+        formUsuario.rol === 'ROLE_ADMIN'
+          ? 'Administrador creado con éxito.'
+          : 'Cliente creado con éxito.'
+      );
+      cargarDatos();
+      setTimeout(() => {
+        setModalUsuario(false);
+      }, 1200);
+    } catch (error) {
+      setUsuarioError(error.message || 'Error al crear el usuario.');
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-pink-50/20 min-h-screen">
       
@@ -262,7 +354,6 @@ export const AdminDashboard = ({ user }) => {
       {/* Tarjetas de Métricas (Dashboard) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         
-        {/* Total Recaudado */}
         <div className="bg-white/80 backdrop-blur-sm p-5 rounded-3xl border border-pink-100 shadow-sm flex items-center gap-4">
           <div className="p-3 bg-pink-100 rounded-2xl text-pink-600">
             <DollarSign className="w-7 h-7" />
@@ -274,7 +365,6 @@ export const AdminDashboard = ({ user }) => {
           </div>
         </div>
 
-        {/* Órdenes Totales */}
         <div className="bg-white/80 backdrop-blur-sm p-5 rounded-3xl border border-pink-100 shadow-sm flex items-center gap-4">
           <div className="p-3 bg-pink-100 rounded-2xl text-pink-600">
             <ShoppingBag className="w-7 h-7" />
@@ -286,7 +376,6 @@ export const AdminDashboard = ({ user }) => {
           </div>
         </div>
 
-        {/* Productos Activos */}
         <div className="bg-white/80 backdrop-blur-sm p-5 rounded-3xl border border-pink-100 shadow-sm flex items-center gap-4">
           <div className="p-3 bg-pink-100 rounded-2xl text-pink-600">
             <Package className="w-7 h-7" />
@@ -298,7 +387,6 @@ export const AdminDashboard = ({ user }) => {
           </div>
         </div>
 
-        {/* Categorías */}
         <div className="bg-white/80 backdrop-blur-sm p-5 rounded-3xl border border-pink-100 shadow-sm flex items-center gap-4">
           <div className="p-3 bg-pink-100 rounded-2xl text-pink-600">
             <FolderTree className="w-7 h-7" />
@@ -367,6 +455,17 @@ export const AdminDashboard = ({ user }) => {
           }`}
         >
           <Users className="w-4 h-4" /> Gestión de Clientes
+        </button>
+
+        <button
+          onClick={() => setTabActiva('usuarios')}
+          className={`px-5 py-2.5 rounded-2xl font-bold text-sm transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+            tabActiva === 'usuarios'
+              ? 'bg-gradient-to-r from-pink-500 to-rose-400 text-white shadow-md shadow-pink-200'
+              : 'text-gray-600 hover:bg-pink-50 hover:text-pink-600'
+          }`}
+        >
+          <UserCog className="w-4 h-4" /> Gestión de Usuarios
         </button>
       </div>
 
@@ -588,7 +687,7 @@ export const AdminDashboard = ({ user }) => {
         </div>
       )}
 
-      {/* VISTA: GESTIÓN DE CLIENTES (ACTUALIZADA) */}
+      {/* VISTA: GESTIÓN DE CLIENTES */}
       {tabActiva === 'clientes' && (
         <div className="bg-white rounded-3xl border border-pink-100 p-6 shadow-sm">
           <div className="flex justify-between items-center mb-6">
@@ -606,7 +705,7 @@ export const AdminDashboard = ({ user }) => {
                   <th className="p-3.5">Correo</th>
                   <th className="p-3.5">Teléfono</th>
                   <th className="p-3.5">Dirección</th>
-                  <th className="p-3.5 text-right rounded-r-2xl">Rol</th>
+                  <th className="p-3.5 text-right rounded-r-2xl">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-pink-50">
@@ -624,15 +723,57 @@ export const AdminDashboard = ({ user }) => {
                       <td className="p-3 text-gray-600">{c.telefono || 'N/A'}</td>
                       <td className="p-3 text-gray-600">{c.direccion || 'N/A'}</td>
                       <td className="p-3 text-right">
-                        <span className="bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full text-xs font-bold">
-                          CLIENTE
-                        </span>
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => abrirModalEditarCliente(c)}
+                            className="p-2 bg-pink-50 hover:bg-pink-100 text-pink-600 rounded-xl transition-colors cursor-pointer"
+                            title="Editar"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => eliminarCliente(c.id)}
+                            className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl transition-colors cursor-pointer"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* VISTA: GESTIÓN DE USUARIOS (crear Admins y Clientes con login) */}
+      {tabActiva === 'usuarios' && (
+        <div className="bg-white rounded-3xl border border-pink-100 p-6 shadow-sm">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-pink-950">Gestión de Usuarios</h2>
+              <p className="text-gray-500 text-sm mt-1">
+                Registra nuevos administradores o clientes con acceso al sistema.
+              </p>
+            </div>
+            <button
+              onClick={abrirModalCrearUsuario}
+              className="bg-gradient-to-r from-pink-500 to-rose-400 text-white px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-1.5 shadow-md shadow-pink-200 hover:from-pink-600 hover:to-rose-500 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" /> Nuevo Usuario
+            </button>
+          </div>
+
+          <div className="bg-pink-50/50 border border-pink-100 rounded-2xl p-5 flex items-start gap-3">
+            <ShieldCheck className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-pink-800">
+              Esta sección es exclusiva del panel de Administración. Aquí puedes crear otros
+              administradores o clientes de forma manual. El registro público (pantalla de
+              "Registrarse") siempre crea cuentas de Cliente únicamente.
+            </p>
           </div>
         </div>
       )}
@@ -902,6 +1043,176 @@ export const AdminDashboard = ({ user }) => {
                 className="w-full bg-gradient-to-r from-pink-500 to-rose-400 text-white font-bold py-3 rounded-2xl shadow-md shadow-pink-200 hover:from-pink-600 hover:to-rose-500 transition-all cursor-pointer mt-2"
               >
                 {modoEdicion ? 'Guardar Cambios' : 'Crear Proveedor'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CLIENTE (Editar) */}
+      {modalCliente && (
+        <div className="fixed inset-0 bg-pink-950/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-pink-100 relative">
+            <button
+              onClick={() => setModalCliente(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-pink-600 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <h3 className="text-xl font-bold text-pink-950 mb-4">Actualizar Cliente</h3>
+
+            <form onSubmit={guardarCliente} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Nombre</label>
+                <input
+                  type="text"
+                  value={formCliente.nombre}
+                  onChange={(e) => setFormCliente({ ...formCliente, nombre: e.target.value })}
+                  required
+                  className="w-full p-2.5 bg-pink-50/30 border border-pink-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Correo</label>
+                <input
+                  type="email"
+                  value={formCliente.email}
+                  onChange={(e) => setFormCliente({ ...formCliente, email: e.target.value })}
+                  required
+                  className="w-full p-2.5 bg-pink-50/30 border border-pink-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Teléfono</label>
+                <input
+                  type="tel"
+                  value={formCliente.telefono}
+                  onChange={(e) => setFormCliente({ ...formCliente, telefono: e.target.value })}
+                  className="w-full p-2.5 bg-pink-50/30 border border-pink-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Dirección</label>
+                <input
+                  type="text"
+                  value={formCliente.direccion}
+                  onChange={(e) => setFormCliente({ ...formCliente, direccion: e.target.value })}
+                  className="w-full p-2.5 bg-pink-50/30 border border-pink-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-gradient-to-r from-pink-500 to-rose-400 text-white font-bold py-3 rounded-2xl shadow-md shadow-pink-200 hover:from-pink-600 hover:to-rose-500 transition-all cursor-pointer mt-2"
+              >
+                Guardar Cambios
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL USUARIO (Crear Admin o Cliente con login) */}
+      {modalUsuario && (
+        <div className="fixed inset-0 bg-pink-950/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-pink-100 relative">
+            <button
+              onClick={() => setModalUsuario(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-pink-600 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <h3 className="text-xl font-bold text-pink-950 mb-4">Nuevo Usuario</h3>
+
+            {usuarioError && (
+              <div className="bg-rose-50 text-rose-700 p-3 rounded-xl text-xs border border-rose-200 mb-4">
+                {usuarioError}
+              </div>
+            )}
+            {usuarioExito && (
+              <div className="bg-emerald-50 text-emerald-700 p-3 rounded-xl text-xs border border-emerald-200 mb-4">
+                {usuarioExito}
+              </div>
+            )}
+
+            <form onSubmit={guardarUsuario} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Tipo de Usuario</label>
+                <select
+                  value={formUsuario.rol}
+                  onChange={(e) => setFormUsuario({ ...formUsuario, rol: e.target.value })}
+                  className="w-full p-2.5 bg-pink-50/30 border border-pink-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+                >
+                  <option value="ROLE_CLIENTE">Cliente</option>
+                  <option value="ROLE_ADMIN">Administrador</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Nombre Completo</label>
+                <input
+                  type="text"
+                  value={formUsuario.nombre}
+                  onChange={(e) => setFormUsuario({ ...formUsuario, nombre: e.target.value })}
+                  required
+                  className="w-full p-2.5 bg-pink-50/30 border border-pink-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Correo (username)</label>
+                <input
+                  type="email"
+                  value={formUsuario.username}
+                  onChange={(e) => setFormUsuario({ ...formUsuario, username: e.target.value })}
+                  required
+                  className="w-full p-2.5 bg-pink-50/30 border border-pink-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Contraseña</label>
+                <input
+                  type="password"
+                  value={formUsuario.password}
+                  onChange={(e) => setFormUsuario({ ...formUsuario, password: e.target.value })}
+                  required
+                  minLength={6}
+                  className="w-full p-2.5 bg-pink-50/30 border border-pink-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Teléfono</label>
+                  <input
+                    type="tel"
+                    value={formUsuario.telefono}
+                    onChange={(e) => setFormUsuario({ ...formUsuario, telefono: e.target.value })}
+                    className="w-full p-2.5 bg-pink-50/30 border border-pink-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Dirección</label>
+                  <input
+                    type="text"
+                    value={formUsuario.direccion}
+                    onChange={(e) => setFormUsuario({ ...formUsuario, direccion: e.target.value })}
+                    className="w-full p-2.5 bg-pink-50/30 border border-pink-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-gradient-to-r from-pink-500 to-rose-400 text-white font-bold py-3 rounded-2xl shadow-md shadow-pink-200 hover:from-pink-600 hover:to-rose-500 transition-all cursor-pointer mt-2"
+              >
+                Crear Usuario
               </button>
             </form>
           </div>
