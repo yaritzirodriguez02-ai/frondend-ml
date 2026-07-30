@@ -1177,8 +1177,8 @@ const cargarDatos = async () => {
                 <label className="block text-xs font-bold text-purple-200 mb-1">Nombre de la Empresa</label>
                 <input
                   type="text"
-                  value={formProveedor.nombreEmpresa}
-                  onChange={(e) => setFormProveedor({ ...formProveedor, nombreEmpresa: e.target.value })}
+                  value={formProveedor.nombre}
+                  onChange={(e) => setFormProveedor({ ...formProveedor, nombre: e.target.value })}
                   required
                   className="w-full p-2.5 bg-purple-950/30 border border-purple-700/40 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 text-purple-100 placeholder-purple-500"
                 />
@@ -1189,7 +1189,7 @@ const cargarDatos = async () => {
                 <input
                   type="text"
                   value={formProveedor.contacto}
-                  onChange={(e) => setFormProveedor({ ...formProveedor, contacto: e.target.value })}
+                  onChange={(e) => setFormProveedor({ ...formProveedor, email: e.target.value })}
                   className="w-full p-2.5 bg-purple-950/30 border border-purple-700/40 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 text-purple-100 placeholder-purple-500"
                 />
               </div>
