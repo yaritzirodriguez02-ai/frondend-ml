@@ -148,7 +148,7 @@ const cartCount = cart.reduce((sum, item)=> sum+item.cantidad, 0);
   };
  
   return (
-      <div className="min-h-screen flex flex-col bg-gray-50 text-gray-800 antialiased">
+      <div className="min-h-screen flex flex-col bg-[#08080f] text-purple-100 antialiased font-mono">
 
        <Navbar
   vistaActual={vistaActual}
