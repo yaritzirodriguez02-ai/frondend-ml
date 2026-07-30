@@ -15,6 +15,7 @@ export const AdminDashboard = ({ user }) => {
   const [categorias, setCategorias] = useState([]);
   const [proveedores, setProveedores] = useState([]);
   const [clientes, setClientes] = useState([]); 
+  const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Estados para modales
@@ -79,31 +80,42 @@ export const AdminDashboard = ({ user }) => {
     cargarDatos();
   }, []);
 
-  const cargarDatos = async () => {
-    setLoading(true);
-    try {
-      const dataProductos = await apiService.getProductos();
-      setProductos(dataProductos || []);
-      
-      const dataCategorias = await apiService.getCategorias();
-      setCategorias(dataCategorias || []);
+const cargarDatos = async () => {
+  setLoading(true);
+  try {
+    const dataProductos = await apiService.getProductos();
+    setProductos(dataProductos || []);
+    
+    const dataCategorias = await apiService.getCategorias();
+    setCategorias(dataCategorias || []);
 
-      if (apiService.getProveedores) {
-        const dataProveedores = await apiService.getProveedores();
-        setProveedores(dataProveedores || []);
-      }
-
-      // Cargar Clientes desde la API
-      if (apiService.getClientes) {
-        const dataClientes = await apiService.getClientes();
-        setClientes(dataClientes || []);
-      }
-    } catch (err) {
-      console.error('Error al cargar datos del admin:', err);
-    } finally {
-      setLoading(false);
+    if (apiService.getProveedores) {
+      const dataProveedores = await apiService.getProveedores();
+      setProveedores(dataProveedores || []);
     }
-  };
+
+    if (apiService.getClientes) {
+      const dataClientes = await apiService.getClientes();
+      setClientes(dataClientes || []);
+    }
+
+    // --- CARGA AISLADA DE USUARIOS ---
+    try {
+      if (apiService.getUsuarios) {
+        const dataUsuarios = await apiService.getUsuarios();
+        console.log("Usuarios recibidos del Backend:", dataUsuarios); // Para depuración
+        setUsuarios(Array.isArray(dataUsuarios) ? dataUsuarios : []);
+      }
+    } catch (errorUsuarios) {
+      console.error("Error específico al cargar usuarios:", errorUsuarios.message);
+    }
+
+  } catch (err) {
+    console.error('Error al cargar datos del admin:', err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // --- LÓGICA DE PRODUCTOS ---
   const abrirModalCrearProducto = () => {
@@ -749,34 +761,86 @@ export const AdminDashboard = ({ user }) => {
         </div>
       )}
 
-      {/* VISTA: GESTIÓN DE USUARIOS (crear Admins y Clientes con login) */}
-      {tabActiva === 'usuarios' && (
-        <div className="bg-white rounded-3xl border border-pink-100 p-6 shadow-sm">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h2 className="text-xl font-bold text-pink-950">Gestión de Usuarios</h2>
-              <p className="text-gray-500 text-sm mt-1">
-                Registra nuevos administradores o clientes con acceso al sistema.
-              </p>
-            </div>
-            <button
-              onClick={abrirModalCrearUsuario}
-              className="bg-gradient-to-r from-pink-500 to-rose-400 text-white px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-1.5 shadow-md shadow-pink-200 hover:from-pink-600 hover:to-rose-500 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" /> Nuevo Usuario
-            </button>
-          </div>
+      {/* VISTA: GESTIÓN DE USUARIOS */}
+{tabActiva === 'usuarios' && (
+  <div className="bg-white rounded-3xl border border-pink-100 p-6 shadow-sm">
+    <div className="flex justify-between items-center mb-6">
+      <div>
+        <h2 className="text-xl font-bold text-pink-950">Gestión de Usuarios</h2>
+        <p className="text-gray-500 text-sm mt-1">
+          Registra nuevos administradores o clientes con acceso al sistema.
+        </p>
+      </div>
+      <button
+        onClick={abrirModalCrearUsuario}
+        className="bg-gradient-to-r from-pink-500 to-rose-400 text-white px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-1.5 shadow-md shadow-pink-200 hover:from-pink-600 hover:to-rose-500 cursor-pointer"
+      >
+        <Plus className="w-4 h-4" /> Nuevo Usuario
+      </button>
+    </div>
 
-          <div className="bg-pink-50/50 border border-pink-100 rounded-2xl p-5 flex items-start gap-3">
-            <ShieldCheck className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-pink-800">
-              Esta sección es exclusiva del panel de Administración. Aquí puedes crear otros
-              administradores o clientes de forma manual. El registro público (pantalla de
-              "Registrarse") siempre crea cuentas de Cliente únicamente.
-            </p>
-          </div>
-        </div>
-      )}
+    <div className="bg-pink-50/50 border border-pink-100 rounded-2xl p-5 flex items-start gap-3 mb-6">
+      <ShieldCheck className="w-5 h-5 text-pink-500 flex-shrink-0 mt-0.5" />
+      <p className="text-sm text-pink-800">
+        Esta sección es exclusiva del panel de Administración. Aquí puedes crear otros
+        administradores o clientes de forma manual. El registro público (pantalla de
+        "Registrarse") siempre crea cuentas de Cliente únicamente.
+      </p>
+    </div>
+
+    <div className="overflow-x-auto">
+      <table className="w-full text-left text-sm text-gray-700">
+        <thead className="bg-pink-50/60 text-pink-900 font-bold text-xs uppercase border-b border-pink-100">
+          <tr>
+            <th className="p-3.5 rounded-l-2xl">Nombre</th>
+            <th className="p-3.5">Correo</th>
+            <th className="p-3.5">Teléfono</th>
+            <th className="p-3.5">Dirección</th>
+            <th className="p-3.5 rounded-r-2xl">Rol</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-pink-50">
+          {(!Array.isArray(usuarios) || usuarios.length === 0) ? (
+            <tr>
+              <td colSpan="5" className="text-center py-8 text-pink-400 font-medium">
+                No hay usuarios para mostrar.
+              </td>
+            </tr>
+          ) : (
+            usuarios.map((u, index) => {
+              const nombreUsr = u?.nombre || 'Sin nombre';
+              const correoUsr = u?.username || u?.email || 'Sin correo';
+              const telUsr = u?.telefono || 'N/A';
+              const dirUsr = u?.direccion || 'N/A';
+              const rolTexto = u?.rol || u?.role || 'ROLE_CLIENTE';
+              const esAdmin = String(rolTexto).toUpperCase().includes('ADMIN');
+
+              return (
+                <tr key={u?.id || index} className="hover:bg-pink-50/30 transition-colors">
+                  <td className="p-3 font-semibold text-gray-800">{nombreUsr}</td>
+                  <td className="p-3 text-pink-950 font-medium">{correoUsr}</td>
+                  <td className="p-3 text-gray-600">{telUsr}</td>
+                  <td className="p-3 text-gray-600">{dirUsr}</td>
+                  <td className="p-3">
+                    <span
+                      className={`px-2.5 py-1 rounded-full text-xs font-bold inline-block ${
+                        esAdmin
+                          ? 'bg-pink-100 text-pink-700 border border-pink-200'
+                          : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                      }`}
+                    >
+                      {esAdmin ? 'Administrador' : 'Cliente'}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
 
       {/* VISTA: PERFIL DEL USUARIO */}
       {tabActiva === 'perfil' && (
