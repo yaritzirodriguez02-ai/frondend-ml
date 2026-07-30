@@ -217,9 +217,9 @@ const cargarDatos = async () => {
     e.preventDefault();
     try {
       if (modoEdicion) {
-        if (apiService.actualizarCategoria) await apiService.actualizarCategoria(editId, formCategoria);
+        if (apiService.actualizarCategorias) await apiService.actualizarCategorias(editId, formCategoria);
       } else {
-        if (apiService.crearCategoria) await apiService.crearCategoria(formCategoria);
+        if (apiService.crearCategorias) await apiService.crearCategorias(formCategoria);
       }
       setModalCategoria(false);
       cargarDatos();
@@ -231,7 +231,7 @@ const cargarDatos = async () => {
   const eliminarCategoria = async (id) => {
     if (window.confirm('¿Seguro que deseas eliminar esta categoría?')) {
       try {
-        if (apiService.eliminarCategoria) await apiService.eliminarCategoria(id);
+        if (apiService.eliminarCategorias) await apiService.eliminarCategorias(id);
         cargarDatos();
       } catch (error) {
         alert('Error al eliminar categoría: ' + error.message);
@@ -263,9 +263,9 @@ const cargarDatos = async () => {
     e.preventDefault();
     try {
       if (modoEdicion) {
-        if (apiService.actualizarProveedor) await apiService.actualizarProveedor(editId, formProveedor);
+        if (apiService.actualizarProveedores) await apiService.actualizarProveedores(editId, formProveedor);
       } else {
-        if (apiService.crearProveedor) await apiService.crearProveedor(formProveedor);
+        if (apiService.crearProveedores) await apiService.crearProveedores(formProveedor);
       }
       setModalProveedor(false);
       cargarDatos();
@@ -277,7 +277,7 @@ const cargarDatos = async () => {
   const eliminarProveedor = async (id) => {
     if (window.confirm('¿Seguro que deseas eliminar este proveedor?')) {
       try {
-        if (apiService.eliminarProveedor) await apiService.eliminarProveedor(id);
+        if (apiService.eliminarProveedores) await apiService.eliminarProveedores(id);
         cargarDatos();
       } catch (error) {
         alert('Error al eliminar proveedor: ' + error.message);
